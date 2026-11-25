@@ -81,8 +81,9 @@ function shareText(){
 $('sendlist').onclick=async()=>{
   if(!sel.size){alert('선택한 작품이 없습니다.');return}
   const t=shareText();
-  if(navigator.share){try{await navigator.share({text:t});return}catch(e){if(e.name==='AbortError')return}}
-  try{await navigator.clipboard.writeText(t);alert('선택 결과 '+sel.size+'점을 복사했습니다.\n카카오톡 대화창에 붙여넣어 보내 주세요.')}
+  const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if(mobile&&navigator.share){try{await navigator.share({text:t});return}catch(e){if(e.name==='AbortError')return}}
+  try{await navigator.clipboard.writeText(t);alert('선택 결과 '+sel.size+'점을 복사했습니다.\n카카오톡 PC 대화창을 열고 Ctrl+V로 붙여넣어 보내 주세요.')}
   catch(e){$('list').style.display='block';$('list').textContent=t;alert('복사가 막혀 있습니다. 아래 글을 직접 복사해 카카오톡으로 보내 주세요.')}
 };
 // 확인 링크(?sel=1.5.9)로 열면 그 선택을 화면에 불러옴
