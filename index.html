@@ -47,6 +47,7 @@ figure.sel figcaption{background:#fff3cf}
   <div class="count">현재 선택한 작품수는? <b id="cnt">0</b>개</div>
   <button id="showlist">선택 목록 보기</button>
   <button id="copylist">목록 복사</button>
+  <button id="sendlist">선택 결과 보내기</button>
   <button id="clearall">전체 해제</button>
 </div>
 <div id="list"></div>
@@ -71,6 +72,23 @@ function upd(){
 $('showlist').onclick=()=>{const l=$('list');l.style.display=l.style.display==='block'?'none':'block';upd()};
 $('copylist').onclick=()=>{const t=names().join(', ');
   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>alert(sel.size+'개 목록을 복사했습니다.')).catch(()=>{$('list').style.display='block';upd();alert('복사가 막혀 있습니다. 아래 목록을 직접 복사해 주세요.')})};
+// 선택 결과를 문구+확인 링크로 만들어 공유(휴대폰은 카톡 등 공유창, PC는 복사)
+function shareText(){
+  const nums=[...sel].sort((a,b)=>a-b);
+  const url=location.origin+location.pathname+'?sel='+nums.join('.');
+  return '[윤철진 작품 선택] '+nums.length+'점\n'+names().join(', ')+'\n\n확인 링크: '+url;
+}
+$('sendlist').onclick=async()=>{
+  if(!sel.size){alert('선택한 작품이 없습니다.');return}
+  const t=shareText();
+  if(navigator.share){try{await navigator.share({text:t});return}catch(e){if(e.name==='AbortError')return}}
+  try{await navigator.clipboard.writeText(t);alert('선택 결과 '+sel.size+'점을 복사했습니다.\n카카오톡 대화창에 붙여넣어 보내 주세요.')}
+  catch(e){$('list').style.display='block';$('list').textContent=t;alert('복사가 막혀 있습니다. 아래 글을 직접 복사해 카카오톡으로 보내 주세요.')}
+};
+// 확인 링크(?sel=1.5.9)로 열면 그 선택을 화면에 불러옴
+(function(){const q=new URLSearchParams(location.search).get('sel');
+  if(q){const arr=q.split('.').map(Number).filter(n=>n>=1&&n<=294);
+    if(arr.length){sel=new Set(arr);save();}}})();
 $('clearall').onclick=()=>{if(sel.size&&confirm('선택한 '+sel.size+'개를 모두 해제할까요?')){sel.clear();save();render()}};
 const jump=$('jump');
 for(let p=1;p<=PAGES;p++){const a=(p-1)*PER+1,b=Math.min(p*PER,TOTAL);
