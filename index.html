@@ -19,7 +19,14 @@ main{max-width:1200px;margin:0 auto;padding:6px 16px 28px;display:grid;grid-temp
 figure{margin:0;background:var(--card);border-radius:8px;overflow:hidden}
 figure a{display:block;background:#e9e4d8}
 figure img{width:100%;aspect-ratio:3/4;object-fit:contain;display:block}
-figcaption{color:var(--ink);padding:10px 14px;font-weight:bold;color:var(--red);font-size:1.05rem}
+figcaption{padding:10px 14px;font-weight:bold;color:var(--red);font-size:1.05rem;display:flex;justify-content:space-between;align-items:center}
+figcaption label{display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--ink);font-size:.95rem;padding:4px 6px}
+figcaption input{width:28px;height:28px;accent-color:var(--red);cursor:pointer}
+figure.sel{outline:4px solid var(--gold)}
+figure.sel figcaption{background:#fff3cf}
+.count{width:100%;text-align:center;font-size:1.15rem;color:var(--cream)}
+.count b{color:var(--gold);font-size:1.5rem}
+#list{display:none;max-width:1000px;margin:0 auto 16px;padding:12px 16px;background:#22325a;border-radius:8px;line-height:1.7;word-break:break-all}
 @media(max-width:800px){main{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:500px){main{grid-template-columns:1fr}}
 @media print{body{background:#fff}header,.nav{display:none}main{grid-template-columns:repeat(3,1fr)}}
@@ -36,6 +43,13 @@ figcaption{color:var(--ink);padding:10px 14px;font-weight:bold;color:var(--red);
   <button id="next">다음 ›</button><button id="last">»</button>
   <select id="jump"></select>
 </div>
+<div class="nav">
+  <div class="count">현재 선택한 작품수는? <b id="cnt">0</b>개</div>
+  <button id="showlist">선택 목록 보기</button>
+  <button id="copylist">목록 복사</button>
+  <button id="clearall">전체 해제</button>
+</div>
+<div id="list"></div>
 <main id="grid"></main>
 <div class="nav">
   <button id="prev2">‹ 이전</button><button id="next2">다음 ›</button>
@@ -45,6 +59,19 @@ const TOTAL=294, PER=6, PAGES=Math.ceil(TOTAL/PER);
 let page=1;
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(4,'0');
+const KEY='cj_selected_v1';
+let sel=new Set();
+try{sel=new Set(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify([...sel]))}catch(e){}};
+const names=()=>[...sel].sort((a,b)=>a-b).map(n=>'CJ'+pad(n));
+function upd(){
+  $('cnt').textContent=sel.size;
+  if($('list').style.display==='block')$('list').textContent=names().join(', ')||'(선택한 작품이 없습니다)';
+}
+$('showlist').onclick=()=>{const l=$('list');l.style.display=l.style.display==='block'?'none':'block';upd()};
+$('copylist').onclick=()=>{const t=names().join(', ');
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>alert(sel.size+'개 목록을 복사했습니다.')).catch(()=>{$('list').style.display='block';upd();alert('복사가 막혀 있습니다. 아래 목록을 직접 복사해 주세요.')})};
+$('clearall').onclick=()=>{if(sel.size&&confirm('선택한 '+sel.size+'개를 모두 해제할까요?')){sel.clear();save();render()}};
 const jump=$('jump');
 for(let p=1;p<=PAGES;p++){const a=(p-1)*PER+1,b=Math.min(p*PER,TOTAL);
   jump.add(new Option(`${p}쪽 (CJ${pad(a)}~CJ${pad(b)})`,p));}
@@ -53,14 +80,18 @@ function render(){
   const a=(page-1)*PER+1, b=Math.min(page*PER,TOTAL);
   for(let n=a;n<=b;n++){
     const id='CJ'+pad(n);
+    const on=sel.has(n);
     g.insertAdjacentHTML('beforeend',
-      `<figure><a href="img/${id}.jpg" target="_blank"><img src="img/${id}.jpg" alt="${id}" loading="lazy"></a><figcaption>${id}</figcaption></figure>`);
+      `<figure class="${on?'sel':''}"><a href="img/${id}.jpg" target="_blank"><img src="img/${id}.jpg" alt="${id}" loading="lazy"></a><figcaption><span>${id}</span><label>선택 <input type="checkbox" data-n="${n}" ${on?'checked':''}></label></figcaption></figure>`);
   }
+  g.querySelectorAll('input[data-n]').forEach(c=>c.onchange=()=>{
+    const n=+c.dataset.n; c.checked?sel.add(n):sel.delete(n);
+    c.closest('figure').classList.toggle('sel',c.checked); save(); upd();});
   $('info').textContent=`${page} / ${PAGES} 쪽`;
   jump.value=page;
   for(const i of ['first','prev','prev2']) $(i).disabled=page===1;
   for(const i of ['last','next','next2']) $(i).disabled=page===PAGES;
-  location.hash=page; window.scrollTo(0,0);
+  upd(); location.hash=page; window.scrollTo(0,0);
 }
 const go=p=>{page=Math.max(1,Math.min(PAGES,p));render()};
 $('first').onclick=()=>go(1); $('last').onclick=()=>go(PAGES);
