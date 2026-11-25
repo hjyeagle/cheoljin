@@ -90,7 +90,7 @@ $('sendlist').onclick=async()=>{
 (function(){const q=new URLSearchParams(location.search).get('sel');
   if(q){const arr=q.split('.').map(Number).filter(n=>n>=1&&n<=294);
     if(arr.length){sel=new Set(arr);save();}}})();
-$('clearall').onclick=()=>{if(sel.size&&confirm('선택한 '+sel.size+'개를 모두 해제할까요?')){sel.clear();save();render()}};
+$('clearall').onclick=()=>{if(sel.size&&confirm('선택한 '+sel.size+'개를 모두 해제할까요?')){sel.clear();save();go(1)}};
 const jump=$('jump');
 for(let p=1;p<=PAGES;p++){const a=(p-1)*PER+1,b=Math.min(p*PER,TOTAL);
   jump.add(new Option(`${p}쪽 (CJ${pad(a)}~CJ${pad(b)})`,p));}
