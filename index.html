@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>윤철진 작품 목록</title>
+<style>
+:root{--bg:#14213d;--gold:#e7c46a;--cream:#f6f1e7;--card:#fbf9f4;--ink:#1e1e1e;--red:#c0392b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--cream);font-family:'Malgun Gothic','Noto Sans KR',sans-serif}
+header{text-align:center;padding:22px 16px 6px}
+h1{margin:0;font-size:1.5rem;color:var(--gold);letter-spacing:.05em}
+header p{margin:6px 0 0;color:#b8c0d0;font-size:.9rem}
+.nav{display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:wrap;padding:12px 16px}
+.nav button,.nav select{background:#22325a;color:var(--cream);border:1px solid #3a4b78;border-radius:6px;padding:8px 14px;font-size:1rem;cursor:pointer}
+.nav button:disabled{opacity:.35;cursor:default}
+.nav span{min-width:90px;text-align:center}
+main{max-width:1200px;margin:0 auto;padding:6px 16px 28px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+figure{margin:0;background:var(--card);border-radius:8px;overflow:hidden}
+figure a{display:block;background:#e9e4d8}
+figure img{width:100%;aspect-ratio:3/4;object-fit:contain;display:block}
+figcaption{color:var(--ink);padding:10px 14px;font-weight:bold;color:var(--red);font-size:1.05rem}
+@media(max-width:800px){main{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){main{grid-template-columns:1fr}}
+@media print{body{background:#fff}header,.nav{display:none}main{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>윤철진 작품 목록</h1>
+  <p>한 페이지 6점 · 이미지를 누르면 크게 열립니다</p>
+</header>
+<div class="nav">
+  <button id="first">«</button><button id="prev">‹ 이전</button>
+  <span id="info"></span>
+  <button id="next">다음 ›</button><button id="last">»</button>
+  <select id="jump"></select>
+</div>
+<main id="grid"></main>
+<div class="nav">
+  <button id="prev2">‹ 이전</button><button id="next2">다음 ›</button>
+</div>
+<script>
+const TOTAL=294, PER=6, PAGES=Math.ceil(TOTAL/PER);
+let page=1;
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(4,'0');
+const jump=$('jump');
+for(let p=1;p<=PAGES;p++){const a=(p-1)*PER+1,b=Math.min(p*PER,TOTAL);
+  jump.add(new Option(`${p}쪽 (CJ${pad(a)}~CJ${pad(b)})`,p));}
+function render(){
+  const g=$('grid'); g.innerHTML='';
+  const a=(page-1)*PER+1, b=Math.min(page*PER,TOTAL);
+  for(let n=a;n<=b;n++){
+    const id='CJ'+pad(n);
+    g.insertAdjacentHTML('beforeend',
+      `<figure><a href="img/${id}.jpg" target="_blank"><img src="img/${id}.jpg" alt="${id}" loading="lazy"></a><figcaption>${id}</figcaption></figure>`);
+  }
+  $('info').textContent=`${page} / ${PAGES} 쪽`;
+  jump.value=page;
+  for(const i of ['first','prev','prev2']) $(i).disabled=page===1;
+  for(const i of ['last','next','next2']) $(i).disabled=page===PAGES;
+  location.hash=page; window.scrollTo(0,0);
+}
+const go=p=>{page=Math.max(1,Math.min(PAGES,p));render()};
+$('first').onclick=()=>go(1); $('last').onclick=()=>go(PAGES);
+for(const i of ['prev','prev2']) $(i).onclick=()=>go(page-1);
+for(const i of ['next','next2']) $(i).onclick=()=>go(page+1);
+jump.onchange=()=>go(+jump.value);
+document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')go(page-1);if(e.key==='ArrowRight')go(page+1)});
+page=Math.max(1,Math.min(PAGES,parseInt(location.hash.slice(1))||1));
+render();
+</script>
+</body>
+</html>
